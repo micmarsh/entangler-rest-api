@@ -1,5 +1,6 @@
 (ns movienight.handler
-    (:use compojure.core)
+    (:use compojure.core
+        [marshmacros.coffee :only [cofmap]])
     (:require [compojure.handler :as handler]
         [compojure.route :as route]))
 
@@ -9,6 +10,9 @@
     ;else
         false))
 
+(def ALL_MESSAGE "you got all the videos")
+(def FAKE_URL "http://url.lulz" )
+
 (defn- handle-post [params]
     (let [{:keys [url convert]} params]
          (if (str->bool convert)
@@ -16,12 +20,14 @@
             ;else
                 (str "upload the video " url))))
 
-(def ALL_MESSAGE "you got all the videos")
-
+(defn- handle-single-video [id]
+    (let [base (cofmap id)
+          with-url (assoc base :url FAKE_URL)]
+        {:body with-url}))
 
 (defroutes app-routes
     (GET "/videos" [] ALL_MESSAGE)
-    (GET "/videos/:id" [id] (str "you got a video " id))
+    (GET "/videos/:id" [id] (handle-single-video id))
     (POST "/videos" {params :params} (handle-post params))
     (route/resources "/")
     (route/not-found "Not Found"))
