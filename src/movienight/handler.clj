@@ -1,7 +1,8 @@
 (ns movienight.handler
     (:use compojure.core
         [marshmacros.coffee :only [cofmap]]
-        [crypto.random :only [url-part]])
+        [crypto.random :only [url-part]]
+        [clojure.set :only [index]])
     (:require [compojure.handler :as handler]
         [compojure.route :as route]))
 
@@ -31,12 +32,14 @@
         data))
 
 (defn- find-single-video [id]
-    (let [base (cofmap id)]
-        (if (contains? @fake-db id)
-            {:body base}
-        ;else
+    (let [id-lookup (cofmap id)
+          indexed (index @fake-db [:id])
+          entry  (first (get indexed id-lookup))]
+        (if (nil? entry)
             {:body "Video doesn't exist"
-             :status 401})))
+             :status 401}
+        ;else
+            {:body entry})))
 
 (defroutes app-routes
     (GET "/videos" [] ALL_MESSAGE)
