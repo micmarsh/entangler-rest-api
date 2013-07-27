@@ -1,8 +1,7 @@
 (ns movienight.handler
     (:use compojure.core
-        [marshmacros.coffee :only [cofmap]]
-        [crypto.random :only [url-part]]
-        [clojure.set :only [index]])
+        movienight.auth
+        [marshmacros.coffee :only [cofmap]])
     (:require [compojure.handler :as handler]
         [compojure.route :as route]))
 
@@ -16,11 +15,12 @@
 (def FAKE_URL "http://url.lulz")
 
 
-
 (defroutes app-routes
     (GET "/videos" [] ALL_MESSAGE)
     (GET "/videos/:id" [id] ())
     (POST "/videos" {params :params} ())
+    (POST "/signup" {params :params})
+    (POST "/login" {params :params})
     (route/resources "/")
     (route/not-found "Not Found"))
 
