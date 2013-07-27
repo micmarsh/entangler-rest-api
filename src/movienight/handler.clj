@@ -19,8 +19,8 @@
     (GET "/videos" [] ALL_MESSAGE)
     (GET "/videos/:id" [id] ())
     (POST "/videos" {params :params} ())
-    (POST "/signup" {params :params})
-    (POST "/login" {params :params})
+    (POST "/signup" {params :params} (signup params))
+    (POST "/login" {params :params} )
     (route/resources "/")
     (route/not-found "Not Found"))
 

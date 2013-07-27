@@ -39,9 +39,10 @@
         (if error-message
            {:error error-message}
         ;else
-           (user-from-kinvey 
-                (k/signup kinvey-app 
-                    (assoc args :username (:email args)))))))
+            (->> (:email args)
+                (assoc args :username)
+                (k/signup kinvey-app)
+                (user-from-kinvey)))))
 
 (defn login [email password]
     (let [error-message (check-for-user-error 
