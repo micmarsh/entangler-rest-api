@@ -1,13 +1,14 @@
 (ns movienight.test.handler
   (:use clojure.test
         ring.mock.request
+        movienight.test.random
         movienight.handler))
 
 
 
 (deftest post-get
-  (def posted-id (atom nil))
 
+    (testing "makes a new user")
   ; (testing "gets all videos"
   ;   (let [response (app (request :get "/videos"))]
   ;     (is (= (:status response) 200))

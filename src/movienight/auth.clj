@@ -5,8 +5,15 @@
 
 (def kinvey-app (k/initialize-app APP_KEY APP_SECRET))
 
-(def good-auth (atom #{}))
-(def bad-auth (atom #{}))
+(def good-auth (atom { }))
+(def bad-auth (atom { }))
+(defn- set-good-auth! [token]
+    (swap! bad-auth #(dissoc % token))
+    (swap! good-auth #(assoc % token true)))
+(defn- set-bad-auth! [token]
+    (swap! good-auth #(dissoc % token))
+    (swap! bad-auth #(assoc % token true)))
+
 
 (defn- get-attr-adder [kinvey-user]
     (fn [so-far, attr]
@@ -22,8 +29,8 @@
           user-no-auth (reduce (get-attr-adder kinvey-user)
             { } attributes)
           user-auth (entangler-auth kinvey-user)]
-          (swap! good-auth #(conj % user-auth))
-          (assoc user-no-auth :authtoken user-auth)))
+              (set-good-auth! user-auth)
+              (assoc user-no-auth :authtoken user-auth)))
 
 
 (defn- check-for-user-error [{:keys [email password]}]
@@ -34,24 +41,24 @@
         :else
          nil))
 
-(defn signup [args]
+(defn- signup-or-login [args no-errors]
     (let [error-message (check-for-user-error args)]
         (if error-message
            {:error error-message}
         ;else
-            (->> (:email args)
-                (assoc args :username)
+            (no-errors args))))
+(defn signup [args]
+    (signup-or-login args 
+                #(->> (:email %)
+                (assoc % :username)
                 (k/signup kinvey-app)
-                (user-from-kinvey)))))
-
+                (user-from-kinvey))))
 (defn login [email password]
-    (let [error-message (check-for-user-error 
-            (cofmap email password))]
-        (if error-message
-            {:error error-message}
-        ;else
-            (user-from-kinvey
-                (k/login kinvey-app email password)))))
+    (signup-or-login 
+        (cofmap email password)
+                (fn [{:keys [email password]}]
+                    (user-from-kinvey
+                        (k/login kinvey-app email password)))))
 
 ;TODO: signup: take first, last, email, password
 ;       login: email, password
