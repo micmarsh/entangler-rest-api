@@ -5,7 +5,7 @@
 
 
 
-(deftest test-app
+(deftest post-get
   (def posted-id (atom nil))
 
   (testing "gets all videos"
@@ -27,6 +27,11 @@
           body (:body response)]
       (is (= (:id body) @posted-id))
       (is (= (:url body) FAKE_URL))))
+
+  (testing "doesn't get a video that isn't there"
+    (let [video-route "/videos/meet_lol"
+          response (app (request :get video-route))
+          {:keys [body]} response]))
 
   (testing "not-found route"
     (let [response (app (request :get "/invalid"))]
