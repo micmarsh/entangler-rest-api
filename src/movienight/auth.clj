@@ -25,7 +25,7 @@
             "Entangler "
             (drop (count "Kinvey ") kinvey-auth))))
 (defn- user-from-kinvey [kinvey-user]
-    (let [attributes [:email, :firstName, :lastName]
+    (let [attributes [:email, :firstName, :lastName, :_id]
           user-no-auth (reduce (get-attr-adder kinvey-user)
             { } attributes)
           user-auth (entangler-auth kinvey-user)]

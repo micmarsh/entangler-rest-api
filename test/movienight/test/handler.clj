@@ -22,7 +22,6 @@
 
     (testing "makes a new user"
         (let [response (make-post "/signup?" base-info)]
-              (println response)
               (base-check (:body response) base-info)))
 
     (testing "can't make new user without email"

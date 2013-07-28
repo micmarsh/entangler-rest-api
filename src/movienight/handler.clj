@@ -4,7 +4,8 @@
         [marshmacros.coffee :only [cofmap]])
     (:require [compojure.handler :as handler]
         [compojure.route :as route]
-        [liberator.core :refer [resource defresource]] ))
+        [liberator.core :refer [resource defresource]]
+        [liberator.dev :refer [wrap-trace]] ))
 
 (defn- str->bool [string]
     (if string
@@ -36,9 +37,8 @@
                   :post! (fn [context]
                     (let [params (get-in context [:request :params])
                           response (build-response (signup params))]
-                          (println response)
-                          response )
-                  :handle-created #(println %))
+                          response ))
+                  :handle-created :body
                 ))
         ;(build-response (signup params))  )
     (POST "/login" {params :params} 
@@ -48,4 +48,5 @@
     (route/not-found "Not Found"))
 
 (def app
-    (handler/site app-routes))
+    (-> app-routes
+        handler/site))
