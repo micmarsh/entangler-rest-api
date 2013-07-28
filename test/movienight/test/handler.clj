@@ -33,11 +33,11 @@
               response (make-post "/login?" just-credentials)]
               (base-check (:body response) base-info)))
 
-    ; (testing "can't log in with wrong password"
-    ;     (let [just-credentials (get-credentials base-info)
-    ;           wrong-password (assoc just-credentials :password "poop")
-    ;           response (make-post "/login?" wrong-password)]
-    ;           (is (= (:status response) 401))))
+    (testing "can't log in with wrong password"
+        (let [just-credentials (get-credentials base-info)
+              wrong-password (assoc just-credentials :password "poop")
+              response (make-post "/login?" wrong-password)]
+              (is (= (:status response) 401))))
 
   ; (testing "gets all videos"
   ;   (let [response (app (request :get "/videos"))]
