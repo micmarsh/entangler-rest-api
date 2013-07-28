@@ -39,9 +39,6 @@
     ;           response (make-post "/login?" wrong-password)]
     ;           (is (= (:status response) 401))))
 
-        ; (testing "signs up normally"
-        ; (let [signed-up (signup base-info) ]
-        ;     (base-check signed-up)))
   ; (testing "gets all videos"
   ;   (let [response (app (request :get "/videos"))]
   ;     (is (= (:status response) 200))

@@ -47,11 +47,8 @@
            {:error error-message
             :status 401}
         ;else
-            (try 
-                (no-errors args)
-            (catch clojure.lang.ExceptionInfo e
-                (println  e )
-                (println (:object e)))))))
+            (no-errors args))))
+
 (defn signup [args]
     (signup-or-login args 
                 #(->> (:email %)
