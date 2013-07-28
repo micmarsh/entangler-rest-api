@@ -1,14 +1,47 @@
 (ns movienight.test.handler
   (:use clojure.test
         ring.mock.request
-        movienight.test.random
+        movienight.test.basefns
         movienight.handler))
 
 
+(def base-info (get-base-info))
 
-(deftest post-get
+(defn param-string [base-info]
+  (->> base-info
+    (map (fn [[key value]]
+      (str \& (name key) \= value)))
+    (apply str)))
+(defn get-credentials [base-info]
+  (dissoc base-info :firstName :lastName))
+(defn make-post [route params]
+    (app (request :post 
+        (str route (param-string params)))))
 
-    (testing "makes a new user")
+(deftest login-signup
+
+    (testing "makes a new user"
+        (let [response (make-post "/signup?" base-info)]
+              (base-check (:body response) base-info)))
+
+    (testing "can't make new user without email"
+        (let [response (make-post "/signup?" (dissoc base-info :email))]
+              (is (= (:status response) 401))))
+
+    (testing "logs in as just created user"
+        (let [just-credentials (get-credentials base-info)
+              response (make-post "/login?" just-credentials)]
+              (base-check (:body response) base-info)))
+
+    ; (testing "can't log in with wrong password"
+    ;     (let [just-credentials (get-credentials base-info)
+    ;           wrong-password (assoc just-credentials :password "poop")
+    ;           response (make-post "/login?" wrong-password)]
+    ;           (is (= (:status response) 401))))
+
+        ; (testing "signs up normally"
+        ; (let [signed-up (signup base-info) ]
+        ;     (base-check signed-up)))
   ; (testing "gets all videos"
   ;   (let [response (app (request :get "/videos"))]
   ;     (is (= (:status response) 200))

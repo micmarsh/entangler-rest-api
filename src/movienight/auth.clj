@@ -44,9 +44,14 @@
 (defn- signup-or-login [args no-errors]
     (let [error-message (check-for-user-error args)]
         (if error-message
-           {:error error-message}
+           {:error error-message
+            :status 401}
         ;else
-            (no-errors args))))
+            (try 
+                (no-errors args)
+            (catch clojure.lang.ExceptionInfo e
+                (println  e )
+                (println (:object e)))))))
 (defn signup [args]
     (signup-or-login args 
                 #(->> (:email %)
