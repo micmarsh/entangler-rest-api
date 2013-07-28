@@ -22,28 +22,34 @@
          :status (body :status)}
     ;else
         (cofmap body)))
+(defn no-email-or-password [context]
+    (let [params (get-in context [:request :params])]
+                (or (nil? (:email params))
+                    (nil? (:password params)))))
+
+(defresource signup-or-login [response-function]
+           ;TODO: still need good error handling in post!
+                    ; see what happens when exception is thrown 
+                    ; (this can be done below)
+    :available-media-types ["application/json"]
+    :allowed-methods [:post]
+    :malformed? no-email-or-password
+    :post! (fn [context]
+        (let [params (get-in context [:request :params])]
+            (-> params
+                response-function
+                build-response)))
+    :handle-created :body)
 
 (defroutes app-routes
     (GET "/videos" [] ALL_MESSAGE)
     (GET "/videos/:id" [id] ())
     (POST "/videos" {params :params} ())
-    (POST "/signup" [] 
-        (resource :available-media-types ["application/json"]
-                  :allowed-methods [:post]
-                  :malformed? (fn [context]
-                    (let [params (get-in context [:request :params])]
-                        (or (nil? (:email params))
-                            (nil? (:password params)))))
-                  :post! (fn [context]
-                    (let [params (get-in context [:request :params])
-                          response (build-response (signup params))]
-                          response ))
-                  :handle-created :body
-                ))
+    (POST "/signup" [] (signup-or-login signup))
         ;(build-response (signup params))  )
-    (POST "/login" {params :params} 
-        (let [{:keys [email password]} params]
-            (build-response (login email password))))
+    (POST "/login" []
+        (signup-or-login (fn [{:keys [email password]}]
+            (login email password))))
     (route/resources "/")
     (route/not-found "Not Found"))
 
