@@ -3,7 +3,8 @@
         movienight.auth
         [marshmacros.coffee :only [cofmap]])
     (:require [compojure.handler :as handler]
-        [compojure.route :as route]))
+        [compojure.route :as route]
+        [liberator.core :refer [resource defresource]] ))
 
 (defn- str->bool [string]
     (if string
@@ -25,8 +26,21 @@
     (GET "/videos" [] ALL_MESSAGE)
     (GET "/videos/:id" [id] ())
     (POST "/videos" {params :params} ())
-    (POST "/signup" {params :params} 
-        (build-response (signup params))  )
+    (POST "/signup" [] 
+        (resource :available-media-types ["application/json"]
+                  :allowed-methods [:post]
+                  :malformed? (fn [context]
+                    (let [params (get-in context [:request :params])]
+                        (or (nil? (:email params))
+                            (nil? (:password params)))))
+                  :post! (fn [context]
+                    (let [params (get-in context [:request :params])
+                          response (build-response (signup params))]
+                          (println response)
+                          response )
+                  :handle-created #(println %))
+                ))
+        ;(build-response (signup params))  )
     (POST "/login" {params :params} 
         (let [{:keys [email password]} params]
             (build-response (login email password))))

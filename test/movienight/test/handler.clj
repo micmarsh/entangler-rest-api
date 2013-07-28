@@ -22,11 +22,12 @@
 
     (testing "makes a new user"
         (let [response (make-post "/signup?" base-info)]
+              (println response)
               (base-check (:body response) base-info)))
 
     (testing "can't make new user without email"
         (let [response (make-post "/signup?" (dissoc base-info :email))]
-              (is (= (:status response) 401))))
+              (is (= (:status response) 400))))
 
     (testing "logs in as just created user"
         (let [just-credentials (get-credentials base-info)

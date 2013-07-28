@@ -2,6 +2,7 @@
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
   :dependencies [[org.clojure/clojure "1.5.1"]
+                 [liberator "0.9.0"]
                  [compojure "1.1.5"]
                  [marshmacros "0.2.1"]
                  [crypto-random "1.1.0"]
