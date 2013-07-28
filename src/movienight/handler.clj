@@ -49,8 +49,8 @@
         ;(build-response (signup params))  )
     (POST "/login" []
         (signup-or-login (fn [{:keys [email password]}]
-            (login email password)))
-last)    (route/resources "/")
+            (login email password))))
+    (route/resources "/")
     (route/not-found "Not Found"))
 
 (def app
