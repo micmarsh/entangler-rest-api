@@ -6,7 +6,6 @@
                 [compojure.route :as route]
                 [entangler.auth :as auth]))
 
-
 (defroutes app-routes
     (ANY "/particles" [] access-collection)
     (GET "/particles/:id" [id] ())
