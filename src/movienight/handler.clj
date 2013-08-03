@@ -23,6 +23,7 @@
          :status (body :status)}
     ;else
         (cofmap body)))
+
 (defn no-email-or-password [context]
     (let [params (get-in context [:request :params])]
                 (or (nil? (:email params))
@@ -30,6 +31,7 @@
 
 (defn- get-params [context]
     (get-in context [:request :params]))
+
 (defresource signup-or-login [response-function]
     :available-media-types ["application/json"]
     :allowed-methods [:post]
