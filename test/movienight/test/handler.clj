@@ -37,6 +37,7 @@
         (let [just-credentials (get-credentials base-info)
               wrong-password (assoc just-credentials :password "poop")
               response (make-post "/login?" wrong-password)]
+              (println response)
               (is (= (:status response) 401))))
 
   ; (testing "gets all videos"

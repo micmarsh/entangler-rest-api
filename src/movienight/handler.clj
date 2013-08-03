@@ -17,12 +17,12 @@
 (def ALL_MESSAGE "you got all the videos")
 (def FAKE_URL "http://url.lulz")
 
+(defn error? [response]    
+    (let [status (:status response)]
+        (and status (> status 300))))
+
 (defn build-response [body]
-    (if (:error body)
-        {:body (dissoc body :status)
-         :status (body :status)}
-    ;else
-        (cofmap body)))
+        (cofmap body))
 
 (defn no-email-or-password [context]
     (let [params (get-in context [:request :params])]
@@ -41,7 +41,12 @@
             (-> params
                 response-function
                 build-response)))
-    :handle-created :body
+    :handle-created (fn [context] 
+        (let [body (:body context)]
+            (if (error? body)
+                 (liberator.representation/ring-response body)
+                ;else 
+                body)))
 )
 
 (defresource access-collection 
