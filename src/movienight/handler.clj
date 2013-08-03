@@ -1,8 +1,9 @@
 (ns movienight.handler
     (:use compojure.core
-        movienight.auth
         [marshmacros.coffee :only [cofmap]])
     (:require [compojure.handler :as handler]
+        [movienight.auth :as auth]
+        [movienight.datastore :as d]
         [compojure.route :as route]
         [liberator.core :refer [resource defresource]]
         [liberator.dev :refer [wrap-trace]] ))
@@ -27,29 +28,42 @@
                 (or (nil? (:email params))
                     (nil? (:password params)))))
 
+(defn- get-params [context]
+    (get-in context [:request :params]))
 (defresource signup-or-login [response-function]
-           ;TODO: still need good error handling in post!
-                    ; see what happens when exception is thrown 
-                    ; (this can be done below)
     :available-media-types ["application/json"]
     :allowed-methods [:post]
     :malformed? no-email-or-password
     :post! (fn [context]
-        (let [params (get-in context [:request :params])]
+        (let [params (get-params context)]
             (-> params
                 response-function
                 build-response)))
-    :handle-created :body)
+    :handle-created :body
+)
+
+(defresource access-collection 
+    :available-media-types ["application/json"]
+    :allowed-methods [:get :post]
+    :authorized? #(auth/authorized? (:authtoken (get-params %)))
+    :malformed? #(and (:url (get-params %))
+                      (:name (get-params %))) ;TODO: this isn't going to work for GET, will 
+                                        ;need to make it fancy
+    :post! (fn [context]
+        (let [{:keys [url name]} (get-params context)]
+            (d/create! (cofmap url name))))
+)
+
 
 (defroutes app-routes
     (GET "/videos" [] ALL_MESSAGE)
     (GET "/videos/:id" [id] ())
     (POST "/videos" {params :params} ())
-    (POST "/signup" [] (signup-or-login signup))
+    (POST "/signup" [] (signup-or-login auth/signup))
         ;(build-response (signup params))  )
     (POST "/login" []
         (signup-or-login (fn [{:keys [email password]}]
-            (login email password))))
+            (auth/login email password))))
     (route/resources "/")
     (route/not-found "Not Found"))
 

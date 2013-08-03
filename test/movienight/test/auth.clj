@@ -6,6 +6,7 @@
 
 
 (def base-info (get-base-info))
+(def logged-in-user (atom nil))
 
 (deftest signing-up-with-baseinfo 
     (testing "signs up normally"
@@ -21,8 +22,13 @@
     (testing "regular login"
         (let [{:keys [email password]} base-info
               logged-in (login email password)]
-              (base-check logged-in base-info)))
+              (base-check logged-in base-info)
+              (reset! logged-in-user logged-in)))
 
     (testing "two users are in good-auth set"
         (is (= 2 (count @good-auth))))
+
+    (testing "logged-in-user is authorized"
+      (let [authed (authorized? (:authtoken @logged-in-user))]
+        (println authed)))
 )

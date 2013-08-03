@@ -14,6 +14,15 @@
     (swap! good-auth #(dissoc % token))
     (swap! bad-auth #(assoc % token true)))
 
+(defn- auth-ping! [token]
+    (let [user (k/load-user kinvey-app token)
+          collection (k/make-collection user "ping")]
+          ;TODO: this!: kinvey lib needs error handling for this to work!
+          true))
+
+(defn authorized? [token]
+    (or (@good-auth token)
+        (auth-ping! token)))
 
 (defn- get-attr-adder [kinvey-user]
     (fn [so-far, attr]
@@ -24,43 +33,28 @@
         (apply str 
             "Entangler "
             (drop (count "Kinvey ") kinvey-auth))))
-(defn- user-from-kinvey [kinvey-user]
+(defn- convert-user [kinvey-user]
     (let [attributes [:email, :firstName, :lastName, :_id]
-          user-no-auth (reduce (get-attr-adder kinvey-user)
-            { } attributes)
-          user-auth (entangler-auth kinvey-user)]
-              (set-good-auth! user-auth)
-              (assoc user-no-auth :authtoken user-auth)))
+        user-no-auth (reduce (get-attr-adder kinvey-user)
+          { } attributes)
+        user-auth (entangler-auth kinvey-user)]
+            (set-good-auth! user-auth)
+            (assoc user-no-auth :authtoken user-auth)))
 
-
-(defn- check-for-user-error [{:keys [email password]}]
-    (cond (nil? password)
-        "Please provide a password"
-          (nil? email)
-        "Please provide a valid email address"
-        :else
-         nil))
-
-(defn- signup-or-login [args no-errors]
-    (let [error-message (check-for-user-error args)]
-        (if error-message
-           {:error error-message
-            :status 401}
-        ;else
-            (no-errors args))))
+(defn- user-from-kinvey [response]
+    (if (k/kinvey-object? response)
+      (convert-user response)
+      response))
 
 (defn signup [args]
-    (signup-or-login args 
-                #(->> (:email %)
-                (assoc % :username)
-                (k/signup kinvey-app)
-                (user-from-kinvey))))
+    (->> (:email args)
+    (assoc args :username)
+    (k/signup kinvey-app)
+    (user-from-kinvey)))
+
 (defn login [email password]
-    (signup-or-login 
-        (cofmap email password)
-                (fn [{:keys [email password]}]
-                    (user-from-kinvey
-                        (k/login kinvey-app email password)))))
+    (user-from-kinvey
+        (k/login kinvey-app email password)))
 
 ;TODO: signup: take first, last, email, password
 ;       login: email, password
