@@ -24,5 +24,18 @@
 
     (testing "logged-in-user is authorized"
       (let [authed (authorized? (:authtoken @logged-in-user))]
-        (println authed)))
+        (is authed)))
+
+    (testing "some user that's not logged in is not authorized"
+      (let [authed (authorized? "Not loggedInUser")]
+        (is (not authed))))
+
+    ;clear memory to test kinvey-ping
+
+    (reset! good-auth { })
+
+    (testing "logged-in-user is still authorized"
+      (let [authed (authorized? (:authtoken @logged-in-user))]
+        (is authed)))
+
 )

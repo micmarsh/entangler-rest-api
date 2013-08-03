@@ -4,6 +4,8 @@
     (:require [kinvey.core :as k]))
 
 (def kinvey-app (k/initialize-app APP_KEY APP_SECRET))
+(def KINVEY_PREFIX "Kinvey ")
+(def ENTANGLER_PREFIX "Entangler ")
 
 (def good-auth (atom { }))
 (def bad-auth (atom { }))
@@ -14,25 +16,36 @@
     (swap! good-auth #(dissoc % token))
     (swap! bad-auth #(assoc % token true)))
 
+(declare kinvey-auth )
 (defn- auth-ping! [token]
-    (let [user (k/load-user kinvey-app token)
-          collection (k/make-collection user "ping")]
-          ;TODO: this!: kinvey lib needs error handling for this to work!
-          true))
+    (let [kinvey-token (kinvey-auth token)
+          user (k/load-user kinvey-app kinvey-token)
+          collection (k/make-collection user "ping")
+          test-entity (k/new-entity collection {:test true})]
+          (k/kinvey-object? test-entity)))
 
 (defn authorized? [token]
-    (or (@good-auth token)
-        (auth-ping! token)))
+    (and  (not (@bad-auth token))
+          (or (@good-auth token)
+              (auth-ping! token))))
 
 (defn- get-attr-adder [kinvey-user]
     (fn [so-far, attr]
         (assoc so-far attr 
             (k/get-attr kinvey-user attr))))
+
 (defn- entangler-auth [kinvey-user]
     (let [kinvey-auth (k/get-auth kinvey-user)]
         (apply str 
-            "Entangler "
-            (drop (count "Kinvey ") kinvey-auth))))
+            ENTANGLER_PREFIX
+            (drop (count KINVEY_PREFIX) kinvey-auth))))
+
+(defn- kinvey-auth [entangler-token]
+  (->> entangler-token
+    (drop (count ENTANGLER_PREFIX))
+    (apply str KINVEY_PREFIX)))
+
+
 (defn- convert-user [kinvey-user]
     (let [attributes [:email, :firstName, :lastName, :_id]
         user-no-auth (reduce (get-attr-adder kinvey-user)
