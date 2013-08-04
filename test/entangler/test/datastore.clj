@@ -44,7 +44,7 @@
         (let [entities (get-many (with-auth {:limit LIMIT}))]
           (is (= (count entities) LIMIT))
           (doseq [entity entities]
-            (is (not (kinvey-object? entity)))))
+            (is (not (kinvey-object? entity))))))
 
     (testing "update things"
         (let [new-attr {:name "Homestar Runner Dot Net"}
@@ -57,8 +57,8 @@
                              with-auth 
                             (assoc :_id @created-id)))
             whom (:who shared)]
-            (is (= (count whom 2))
-            (is (contains? (set whom) @user-id)))
+            (is (= (count whom) 2))
+            (is (contains? (set whom) @user-id))))
 
     (testing "delete things"
         (let [deleted (delete! (with-auth {:_id @created-id}) )]
