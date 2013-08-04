@@ -1,16 +1,18 @@
 (ns entangler.test.datastore
     (:use clojure.test
-        entangler.test.random
-        entangler.auth))
+        entangler.auth
+        entangler.datastore))
 
 (def authtoken (atom nil))
 (defn- with-auth [attributes]
     (assoc attributes :authtoken @authtoken))
 (def created-id (atom nil))
 (defn- without-meta [object]
-    (dissoc object :_id :timestamp))
+    (dissoc object :_id ))
 (def base-attr
-    {:url "http://www.homestarrunner.com" :name "Homestar Runner"})
+    {:url "http://www.homestarrunner.com" 
+    :name "Homestar Runner" 
+    :timestamp "2-nite"})
 
 
 (deftest basic-crud 
@@ -18,20 +20,20 @@
         (let [user (login "foo@bar.com" "bar")
              auth (:authtoken user)]
             (is (not (nil? auth)))
-            (reset! authtoken auth))
+            (reset! authtoken auth)))
     (testing "can create things"
         (let [attributes base-attr
               created (create! (with-auth attributes))]
               (is (= created (without-meta attributes)))
               (reset! created-id (:_id attributes))))
-    (testing "update things"
-        (let [new-attr {:name "Homestar Runner Dot Net"}
-              updated (update! (-> new-attr with-auth (assoc :_id @created-id)))
-              stripped (without-meta updated)]
-              (is (= stripped (assoc stripped new-attr)))))
-    (testing "delete things"
-        (let [deleted (delete! {:_id @created-id})]
-            (is (= deleted {:count 1}))))
+    ; (testing "update things"
+    ;     (let [new-attr {:name "Homestar Runner Dot Net"}
+    ;           updated (update! (-> new-attr with-auth (assoc :_id @created-id)))
+    ;           stripped (without-meta updated)]
+    ;           (is (= stripped (assoc stripped new-attr)))))
+    ; (testing "delete things"
+    ;     (let [deleted (delete! {:_id @created-id})]
+    ;         (is (= deleted {:count 1}))))
 
 )
 
