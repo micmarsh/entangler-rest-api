@@ -1,7 +1,8 @@
 (ns entangler.test.datastore
     (:use clojure.test
         entangler.auth
-        entangler.datastore))
+        entangler.datastore
+        [kinvey.core :only [kinvey-object?]]))
 
 (def authtoken (atom nil))
 (defn- with-auth [attributes]
@@ -14,6 +15,8 @@
     :name "Homestar Runner" 
     :timestamp "2-nite"})
 
+(def LIMIT 5)
+
 (def old-entity (atom nil))
 (deftest basic-crud 
     (testing "logs in and stores relevant authkey"
@@ -21,15 +24,25 @@
              auth (:authtoken user)]
             (is (not (nil? auth)))
             (reset! authtoken auth)))
+
     (testing "can create things"
         (let [attributes base-attr
               created (create! (with-auth attributes))]
               (is (= attributes (without-meta created)))
               (reset! old-entity created)
               (reset! created-id (:_id created))))
+
     (testing "get one"
         (let [entity (get-one (with-auth {:_id @created-id}))]
           (is (= @old-entity entity))))
+
+    (testing "get some"
+        (let [entities (get-many (with-auth {:limit LIMIT}))]
+          (is (= (count entities) LIMIT))
+          (doseq [entity entities]
+            (is (not (kinvey-object? entity)))
+            )))
+
     (testing "update things"
         (let [new-attr {:name "Homestar Runner Dot Net"}
               updated (update! (-> new-attr with-auth (assoc :_id @created-id)))

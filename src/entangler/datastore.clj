@@ -47,6 +47,15 @@
 (defn get-one [params]
     (kinvey->entangler (get-it params)))
 
+(defn get-many [params]
+    (let [token (:authtoken params)
+          coll (get-collection token)
+          response (k/get-entities 
+            coll {:limit (:limit params)})]
+          (if (= (type response) clojure.lang.PersistentVector)
+            (map kinvey->entangler response)
+            response))
+
 (defn update! [params]
     (let [entity (get-it params)
           new-entity (k/update entity (sanitize params))]
