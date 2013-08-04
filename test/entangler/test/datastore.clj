@@ -24,13 +24,13 @@
     (testing "can create things"
         (let [attributes base-attr
               created (create! (with-auth attributes))]
-              (is (= created (without-meta attributes)))
-              (reset! created-id (:_id attributes))))
-    ; (testing "update things"
-    ;     (let [new-attr {:name "Homestar Runner Dot Net"}
-    ;           updated (update! (-> new-attr with-auth (assoc :_id @created-id)))
-    ;           stripped (without-meta updated)]
-    ;           (is (= stripped (assoc stripped new-attr)))))
+              (is (= attributes (without-meta created)))
+              (reset! created-id (:_id created))))
+    (testing "update things"
+        (let [new-attr {:name "Homestar Runner Dot Net"}
+              updated (update! (-> new-attr with-auth (assoc :_id @created-id)))
+              stripped (without-meta updated)]
+              (is (= stripped (merge stripped new-attr)))))
     ; (testing "delete things"
     ;     (let [deleted (delete! {:_id @created-id})]
     ;         (is (= deleted {:count 1}))))
