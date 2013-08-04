@@ -42,7 +42,6 @@
                                 ( kmd "ect"))))
             :who (fn [kinvey] 
                     (let [acl (k/get-attr kinvey :_acl)]
-                      (println acl)
                       (vec (acl->who acl))))))))
 
 (defn- kinvey->entangler [entity]
@@ -64,7 +63,6 @@
           coll (get-collection token)
           kinvey-entity (k/new-entity coll (sanitize params))]
           (kinvey->entangler kinvey-entity)))
-
 
 (defn- get-it [params]
     (let [{:keys [authtoken _id]} params
@@ -95,9 +93,11 @@
 
 (defn share! [params]
     (let [{:keys [_id email]} params
-          entity (get-it params)
+          entity (get-one params)
+          null (println entity)
           who (:who entity)
           with-id (conj who _id)]
+        (println with-id)
         (-> {:who with-id}
           (merge params)
            update!)))

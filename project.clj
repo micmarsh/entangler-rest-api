@@ -6,7 +6,7 @@
                  [compojure "1.1.5"]
                  [marshmacros "0.2.1"]
                  [crypto-random "1.1.0"]
-                 [kinvey "0.1.4"]]
+                 [kinvey "0.1.5"]]
   :plugins [[lein-ring "0.8.5"]]
   :ring {:handler entangler.handler/app}
   :profiles
