@@ -14,7 +14,7 @@
     :name "Homestar Runner" 
     :timestamp "2-nite"})
 
-
+(def old-entity (atom nil))
 (deftest basic-crud 
     (testing "logs in and stores relevant authkey"
         (let [user (login "foo@bar.com" "bar")
@@ -25,12 +25,17 @@
         (let [attributes base-attr
               created (create! (with-auth attributes))]
               (is (= attributes (without-meta created)))
+              (reset! old-entity created)
               (reset! created-id (:_id created))))
+    (testing "get one"
+        (let [entity (get-one (with-auth {:_id @created-id}))]
+          (is (= @old-entity entity))))
     (testing "update things"
         (let [new-attr {:name "Homestar Runner Dot Net"}
               updated (update! (-> new-attr with-auth (assoc :_id @created-id)))
               stripped (without-meta updated)]
               (is (= stripped (merge stripped new-attr)))))
+          
     (testing "delete things"
         (let [deleted (delete! (with-auth {:_id @created-id}) )]
             (is (= deleted {"count" 1}))))

@@ -16,8 +16,8 @@
                     with-nils)]
           (apply merge unmerged)))
 
-(def kinvey->entangler
-    (utils/get-map-converter     
+(def to-entangler     
+  (utils/get-map-converter     
         (let [without-time (apply merge 
             (for [-key [:name :url :_id]]
                 {-key #(k/get-attr % -key)}))]
@@ -26,6 +26,11 @@
                         (or (k/get-attr kinvey :timestamp)
                             (let [kmd (k/get-attr kinvey :_kmd)]
                                 ( kmd "ect"))))))))
+
+(defn- kinvey->entangler [entity]
+    (if (k/kinvey-object? entity)
+      (to-entangler entity)
+    entity))
  
 (defn create! [params]
     (let [token (:authtoken params)
@@ -34,10 +39,16 @@
           (kinvey->entangler kinvey-entity)))
 
 
-(defn update! [params]
+(defn- get-it [params]
     (let [{:keys [authtoken _id]} params
-          coll (get-collection authtoken)
-          entity (k/get-entity coll _id)
+        coll (get-collection authtoken)]
+        (k/get-entity coll _id)))
+
+(defn get-one [params]
+    (kinvey->entangler (get-it params)))
+
+(defn update! [params]
+    (let [entity (get-it params)
           new-entity (k/update entity (sanitize params))]
           (kinvey->entangler new-entity)))
 
@@ -45,3 +56,6 @@
     (let [{:keys [authtoken _id]} params
             coll (get-collection authtoken)]
             (k/delete-entity coll _id)))
+
+
+
