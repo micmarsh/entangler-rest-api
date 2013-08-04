@@ -10,7 +10,7 @@
     (assoc attributes :authtoken @authtoken))
 (def created-id (atom nil))
 (defn- without-meta [object]
-    (dissoc object :_id ))
+    (dissoc object :_id :who ))
 (def base-attr
     {:url "http://www.homestarrunner.com" 
     :name "Homestar Runner" 

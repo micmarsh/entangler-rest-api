@@ -9,14 +9,16 @@
         (k/load-user (utils/kinvey-auth token))
         (k/make-collection "things")))
 
-;TODO this is going to do real work soon, make it convert, or
-;whatever
+
+(declare entangler->kinvey )
 (defn- sanitize [{:keys [name url timestamp who]}]
     (let [with-nils (c/cofmap name url timestamp who)
           unmerged  (map 
                 (fn [[key value]] (if value {key value} {}))
                     with-nils)]
-          (apply merge unmerged)))
+          (->> unmerged
+          (apply merge)
+          entangler->kinvey)))
 
 (defn- who->acl [who]
     {"creator" (who 0)
@@ -55,7 +57,10 @@
       :url :url
       :_id :_id
       :timestamp :timestamp
-      :_acl #(who->acl (vec (:who %)))
+      :_acl #(let[who (:who %)]
+                (if who
+                  (who->acl who)
+                  {"creator" (:_id %)}))  
       }))
  
 (defn create! [params]
@@ -94,10 +99,8 @@
 (defn share! [params]
     (let [{:keys [_id email]} params
           entity (get-one params)
-          null (println entity)
           who (:who entity)
           with-id (conj who _id)]
-        (println with-id)
         (-> {:who with-id}
           (merge params)
            update!)))
