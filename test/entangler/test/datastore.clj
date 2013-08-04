@@ -6,9 +6,11 @@
 
 (def authtoken (atom nil))
 (def user-id (atom nil))
+(def old-entity (atom nil))
+(def created-id (atom nil))
+
 (defn- with-auth [attributes]
     (assoc attributes :authtoken @authtoken))
-(def created-id (atom nil))
 (defn- without-meta [object]
     (dissoc object :_id :who ))
 (def base-attr
@@ -20,7 +22,6 @@
 
 (def LIMIT 5)
 
-(def old-entity (atom nil))
 (deftest basic-crud 
     (testing "logs in and stores relevant authkey"
         (let [user (login "foo@bar.com" "bar")
@@ -50,7 +51,7 @@
         (let [new-attr {:name "Homestar Runner Dot Net"}
               updated (update! (-> new-attr with-auth (assoc :_id @created-id)))
               stripped (without-meta updated)]
-              (is (= stripped (merge stripped new-attr)))))
+              (is (= @old-entity (merge stripped new-attr)))))
 
     (testing "share stuff"
       (let [shared (share! (-> {:email other-email}
@@ -58,13 +59,12 @@
                             (assoc :_id @created-id)))
             whom (:who shared)]
             (is (= (count whom) 2))
+            (is (= @old-entity (without-meta shared)))
             (is (contains? (set whom) @user-id))))
 
     (testing "delete things"
         (let [deleted (delete! (with-auth {:_id @created-id}) )]
             (is (= deleted {"count" 1}))))
-
-
 )
 
 ;. CUD should be pretty one-to-one, 
