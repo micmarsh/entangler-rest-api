@@ -5,6 +5,7 @@
         [kinvey.core :only [kinvey-object?]]))
 
 (def authtoken (atom nil))
+(def user-id (atom nil))
 (defn- with-auth [attributes]
     (assoc attributes :authtoken @authtoken))
 (def created-id (atom nil))
@@ -15,6 +16,8 @@
     :name "Homestar Runner" 
     :timestamp "2-nite"})
 
+(def other-email "you@you.com")
+
 (def LIMIT 5)
 
 (def old-entity (atom nil))
@@ -23,7 +26,8 @@
         (let [user (login "foo@bar.com" "bar")
              auth (:authtoken user)]
             (is (not (nil? auth)))
-            (reset! authtoken auth)))
+            (reset! authtoken auth)
+            (reset! user-id (:_id user))))
 
     (testing "can create things"
         (let [attributes base-attr
@@ -40,18 +44,26 @@
         (let [entities (get-many (with-auth {:limit LIMIT}))]
           (is (= (count entities) LIMIT))
           (doseq [entity entities]
-            (is (not (kinvey-object? entity)))
-            )))
+            (is (not (kinvey-object? entity)))))
 
     (testing "update things"
         (let [new-attr {:name "Homestar Runner Dot Net"}
               updated (update! (-> new-attr with-auth (assoc :_id @created-id)))
               stripped (without-meta updated)]
               (is (= stripped (merge stripped new-attr)))))
-          
+
+    (testing "share stuff"
+      (let [shared (share! (-> {:email other-email}
+                             with-auth 
+                            (assoc :_id @created-id)))
+            whom (:who shared)]
+            (is (= (count whom 2))
+            (is (contains? (set whom) @user-id)))
+
     (testing "delete things"
         (let [deleted (delete! (with-auth {:_id @created-id}) )]
             (is (= deleted {"count" 1}))))
+
 
 )
 

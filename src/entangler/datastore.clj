@@ -16,6 +16,13 @@
                     with-nils)]
           (apply merge unmerged)))
 
+(defn- acl->who [acl]
+  (let [creator (acl "creator")
+        r (or (acl "r") [creator])
+        w (or (acl "w") [creator])
+        rw (apply conj r w)]
+      (-> (conj rw creator) set vec )))
+
 (def to-entangler     
   (utils/get-map-converter     
         (let [without-time (apply merge 
@@ -25,7 +32,10 @@
             :timestamp (fn [kinvey]
                         (or (k/get-attr kinvey :timestamp)
                             (let [kmd (k/get-attr kinvey :_kmd)]
-                                ( kmd "ect"))))))))
+                                ( kmd "ect"))))
+            :who (fn [kinvey] 
+                    (let [acl (k/get-attr kinvey :_acl)]
+                      (acl->who acl))))))
 
 (defn- kinvey->entangler [entity]
     (if (k/kinvey-object? entity)
@@ -51,11 +61,11 @@
     (let [token (:authtoken params)
           coll (get-collection token)
           response (k/get-entities 
-            coll {:limit (:limit params)})]
-          (if (= (type response) clojure.lang.PersistentVector)
-            (map kinvey->entangler response)
-            response))
-
+            coll { } {:limit (:limit params)})]
+          (if (= (type response) clojure.lang.PersistentArrayMap)
+            response
+          (map kinvey->entangler response))))
+  
 (defn update! [params]
     (let [entity (get-it params)
           new-entity (k/update entity (sanitize params))]
