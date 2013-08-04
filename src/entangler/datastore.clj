@@ -32,6 +32,8 @@
           coll (get-collection token)
           kinvey-entity (k/new-entity coll (sanitize params))]
           (kinvey->entangler kinvey-entity)))
+
+
 (defn update! [params]
     (let [{:keys [authtoken _id]} params
           coll (get-collection authtoken)
@@ -39,3 +41,7 @@
           new-entity (k/update entity (sanitize params))]
           (kinvey->entangler new-entity)))
 
+(defn delete! [params]
+    (let [{:keys [authtoken _id]} params
+            coll (get-collection authtoken)]
+            (k/delete-entity coll _id)))

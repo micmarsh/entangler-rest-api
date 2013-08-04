@@ -31,9 +31,9 @@
               updated (update! (-> new-attr with-auth (assoc :_id @created-id)))
               stripped (without-meta updated)]
               (is (= stripped (merge stripped new-attr)))))
-    ; (testing "delete things"
-    ;     (let [deleted (delete! {:_id @created-id})]
-    ;         (is (= deleted {:count 1}))))
+    (testing "delete things"
+        (let [deleted (delete! (with-auth {:_id @created-id}) )]
+            (is (= deleted {"count" 1}))))
 
 )
 

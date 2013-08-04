@@ -4,7 +4,14 @@
 
 
 (def entangler-from-kinvey
-)
+    (let [without-time (apply merge 
+                (for [-key [:name :url :_id]]
+                    {-key #(% -key)}))]
+            (assoc without-time
+                :timestamp (fn [kinvey]
+                            (or (kinvey :timestamp)
+                                (let [kmd (kinvey :_kmd)]
+                                    ( kmd :ect)))))))
 
 (def kinvey->entangler 
     (get-map-converter entangler-from-kinvey))
