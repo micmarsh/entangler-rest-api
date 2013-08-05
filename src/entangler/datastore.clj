@@ -11,8 +11,8 @@
 
 
 (declare entangler->kinvey )
-(defn- sanitize [{:keys [name url timestamp who]}]
-    (let [with-nils (c/cofmap name url timestamp who)
+(defn- sanitize [{:keys [name url timestamp who _id]}]
+    (let [with-nils (c/cofmap name url timestamp who _id)
           unmerged  (map 
                 (fn [[key value]] (if value {key value} {}))
                     with-nils)]
