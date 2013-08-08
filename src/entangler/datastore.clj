@@ -17,8 +17,7 @@
                 (fn [[key value]] (if value {key value} {}))
                     with-nils)]
           (->> unmerged
-          (apply merge)
-          entangler->kinvey)))
+          (apply merge))))
 
 (defn- who->acl [who]
     {"creator" (who 0)
@@ -50,7 +49,8 @@
     (if (k/kinvey-object? entity)
       (to-entangler entity)
     entity))
-
+;TODO might be something wrong in here, but 
+;hard to tell for sure
 (def entangler->kinvey
     (utils/get-map-converter {
       :name :name
@@ -62,6 +62,11 @@
                   (who->acl who)
                   {"creator" (:_id %)}))  
       }))
+
+(defn- without-nil-values [hashmap]
+  (->> hashmap
+    (remove (comp nil? second))
+    (into {})))
  
 (defn create! [params]
     (let [token (:authtoken params)
@@ -88,7 +93,11 @@
   
 (defn update! [params]
     (let [entity (get-it params)
-          new-entity (k/update entity (sanitize params))]
+          update-values  (-> params 
+                      sanitize
+                      entangler->kinvey
+                      without-nil-values)
+          new-entity (k/update entity update-values)]
           (kinvey->entangler new-entity)))
 
 (defn delete! [params]

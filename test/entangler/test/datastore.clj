@@ -11,8 +11,7 @@
 
 (defn- with-auth [attributes]
     (assoc attributes :authtoken @authtoken))
-(defn- without-meta [object]
-    (dissoc object :_id :who ))
+
 (def base-attr
     {:url "http://www.homestarrunner.com" 
     :name "Homestar Runner" 
@@ -33,7 +32,7 @@
     (testing "can create things"
         (let [attributes base-attr
               created (create! (with-auth attributes))]
-              (is (= attributes (without-meta created)))
+              (is (= attributes (dissoc created :_id :who)))
               (reset! old-entity created)
               (reset! created-id (:_id created))))
 
@@ -49,9 +48,9 @@
 
     (testing "update things"
         (let [new-attr {:name "Homestar Runner Dot Net"}
-              updated (update! (-> new-attr with-auth (assoc :_id @created-id)))
-              stripped (without-meta updated)]
-              (is (= @old-entity (merge stripped new-attr)))))
+              updated (update! (-> new-attr with-auth (assoc :_id @created-id)))]
+              (swap! old-entity #(merge % new-attr))
+              (is (= updated @old-entity))))
 
     (testing "share stuff"
       (let [shared (share! (-> {:email other-email}
@@ -59,7 +58,7 @@
                             (assoc :_id @created-id)))
             whom (:who shared)]
             (is (= (count whom) 2))
-            (is (= @old-entity (without-meta shared)))
+            (is (= (merge @old-entity {:who whom}) shared))
             (is (contains? (set whom) @user-id))))
 
     (testing "delete things"
