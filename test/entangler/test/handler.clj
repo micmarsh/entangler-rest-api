@@ -24,6 +24,8 @@
 (defn add-auth [request]
   (header request "Authorization" @authtoken))
 
+(def created-items (atom []))
+
 
 (deftest login-signup
 
@@ -32,12 +34,12 @@
               (base-check (:body response) base-info)))
 
     (testing "can't make new user without email"
-        (let [response (send-post "/signup?" (dissoc base-info :email))]
+        (let [response (send-post "/signup" (dissoc base-info :email))]
               (is (= (:status response) 400))))
 
     (testing "logs in as just created user"
         (let [just-credentials (get-credentials base-info)
-              response (send-post "/login?" just-credentials)
+              response (send-post "/login" just-credentials)
               auth (-> response (get :body) json/read-str (get "authtoken"))]
               (reset! authtoken auth)
               (base-check (:body response) base-info)))
@@ -45,13 +47,26 @@
     (testing "can't log in with wrong password"
         (let [just-credentials (get-credentials base-info)
               wrong-password (assoc just-credentials :password "poop")
-              response (send-post "/login?" wrong-password)]
+              response (send-post "/login" wrong-password)]
               (is (= (:status response) 401))))
+
+
+    (testing "can make three new entities")
+      (doseq [text ["godspeed" "pretentiousfriends" "nightcreatures"]]
+        (let [params {:url (str text ".com") :timestamp "Tomorrow Night"}
+              request (make-post "/particles" params)
+              authed (add-auth request)
+              response (app authed)
+              body (-> response :body json/read-str)]
+              (println body)
+              (is (= (body "url") (str text ".com")))
+              (is (= (body "timestamp") "Tomorrow Night"))
+              (swap! created-items #(conj % (body "_id"))))))
 
     (testing "gets all particles"
       (let [response (app
             (add-auth (request :get "/particles")))]
-        (println response)))
+        ()))
 
 
 )
