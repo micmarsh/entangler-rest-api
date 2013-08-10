@@ -2,7 +2,8 @@
   (:use clojure.test
         ring.mock.request
         entangler.test.basefns
-        entangler.handler))
+        entangler.handler)
+  (:require [clojure.data.json :as json]))
 
 
 (def base-info (get-base-info))
@@ -15,57 +16,42 @@
 (defn get-credentials [base-info]
   (dissoc base-info :firstName :lastName))
 (defn make-post [route params]
-    (app (request :post 
-        (str route (param-string params)))))
+  (request :post route params))
+(defn send-post [route params]
+    (app (make-post route params)))
+
+(def authtoken (atom nil))
+(defn add-auth [request]
+  (header request "Authorization" @authtoken))
+
 
 (deftest login-signup
 
     (testing "makes a new user"
-        (let [response (make-post "/signup?" base-info)]
+        (let [response (send-post "/signup?" base-info)]
               (base-check (:body response) base-info)))
 
     (testing "can't make new user without email"
-        (let [response (make-post "/signup?" (dissoc base-info :email))]
+        (let [response (send-post "/signup?" (dissoc base-info :email))]
               (is (= (:status response) 400))))
 
     (testing "logs in as just created user"
         (let [just-credentials (get-credentials base-info)
-              response (make-post "/login?" just-credentials)]
+              response (send-post "/login?" just-credentials)
+              auth (-> response (get :body) json/read-str (get "authtoken"))]
+              (reset! authtoken auth)
               (base-check (:body response) base-info)))
 
     (testing "can't log in with wrong password"
         (let [just-credentials (get-credentials base-info)
               wrong-password (assoc just-credentials :password "poop")
-              response (make-post "/login?" wrong-password)]
+              response (send-post "/login?" wrong-password)]
               (is (= (:status response) 401))))
 
-  ; (testing "gets all videos"
-  ;   (let [response (app (request :get "/videos"))]
-  ;     (is (= (:status response) 200))
-  ;     (is (= (:body response) ALL_MESSAGE))))
+    (testing "gets all particles"
+      (let [response (app
+            (add-auth (request :get "/particles")))]
+        (println response)))
 
-  ; (testing "adds video and gets its id"
-  ;   (let [response (app (request :post (str "/videos?url=" FAKE_URL) ))
-  ;         body (:body response)
-  ;         id (:id body)]
-  ;         (is (not (nil? body)))
-  ;         (is (not (nil? id)))
-  ;         (reset! posted-id id)))
-
-  ; (testing "gets video with id saved id above"
-  ;   (let [video-route (str "/videos/" @posted-id)
-  ;         response (app (request :get video-route))
-  ;         body (:body response)]
-  ;     (is (= (:id body) @posted-id))
-  ;     (is (= (:url body) FAKE_URL))))
-
-  ; (testing "doesn't get a video that isn't there"
-  ;   (let [video-route "/videos/meet_lol"
-  ;         response (app (request :get video-route))
-  ;         {:keys [body]} response]))
-
-  ; (testing "not-found route"
-  ;   (let [response (app (request :get "/invalid"))]
-  ;     (is (= (:status response) 404))))
 
 )
