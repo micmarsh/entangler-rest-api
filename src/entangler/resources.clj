@@ -26,6 +26,10 @@
 
 (defn- get-params [context]
     (get-in context [:request :params]))
+(defn- update-params [context params]
+    (let [old-request (:request context)
+          new-request (assoc old-request :params params)]
+          (assoc context :request new-request)))
 
 (defn- get-headers [context]
     (get-in context [:request :headers]))
@@ -34,7 +38,7 @@
         (or (headers "Authorization")
             (headers "authorization"))))
 
-(defn- created-or-error [context]
+(defn- error-or-response [context]
     (let [body (:body context)]
         (if (error? body)
              (liberator.representation/ring-response body)
@@ -50,20 +54,23 @@
             (-> params
                 response-function
                 build-response)))
-    :handle-created created-or-error
+    :handle-created error-or-response
 )
 
-(defn check-auth-header [context]
+(defn- check-auth-header [context]
     (-> context
         get-auth-header
         auth/authorized?))
 
-(defn datastore-function [function]
+(defn- datastore-function [function]
     (fn [context]
         (let [auth (get-auth-header context)
               params (get-params context)
               authed-params (assoc params :authtoken auth)]
               (function authed-params))))
+(defn- wrapped-in-body [function]
+    (fn [context] {:body
+        ((datastore-function function) context)}))
 
 (defresource access-collection
     :available-media-types ["application/json"]
@@ -72,18 +79,28 @@
     :malformed? #(and (:url (get-params %))
                       (:name (get-params %)))
                       ;TODO: pretty sure test case is letting through crap hmmm
-    :post! (fn [context] {:body
-        ((datastore-function d/create!) context)})
+    :post! (wrapped-in-body d/create!)
 
     :handle-ok (datastore-function d/get-many )
 
-    :handle-created created-or-error
+    :handle-created error-or-response
 )
 
 (defresource single-particle
     :available-media-types ["application/json"]
     :allowed-methods [:get :put :delete]
     :authorized? check-auth-header
+
     :handle-ok (datastore-function d/get-one)
 
+    :put! (fn [context]
+            (let [params (get-params context)
+                  shareto (:shareto params)]
+                (if (contains? params :shareto)
+                    base-fn )) )
+    :delete! (wrapped-in-body d/delete!)
+
+    :handle-created error-or-response
+    :handle-accepted error-or-response
+    :handle-no-content error-or-response
 )

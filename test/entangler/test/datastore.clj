@@ -17,7 +17,7 @@
     :name "Homestar Runner"
     :timestamp "2-nite"})
 
-(def other-email "you@you.com")
+(def other-id (atom nil))
 
 (def LIMIT 5)
 
@@ -28,6 +28,7 @@
             (is (not (nil? auth)))
             (reset! authtoken auth)
             (reset! user-id (:_id user))))
+    (testing "logs in as someone else to get their id")
 
     (testing "can create things"
         (let [attributes base-attr
@@ -56,10 +57,14 @@
       (let [shared (share! (-> {:email other-email}
                              with-auth
                             (assoc :_id @created-id)))
-            whom (:who shared)]
+            whom (:who shared)
+            whom-set (set whom)]
+            (println shared)
+            (println whom)
             (is (= (count whom) 2))
             (is (= (merge @old-entity {:who whom}) shared))
-            (is (contains? (set whom) @user-id))))
+            (is (contains? whom-set @user-id))
+            (is (not (contains? whom-set @created-id)))))
 
     (testing "delete things"
         (let [deleted (delete! (with-auth {:_id @created-id}) )]

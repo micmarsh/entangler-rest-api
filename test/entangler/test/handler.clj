@@ -76,9 +76,11 @@
   ([ids, method, params]
     (for [id ids]
       (let [authed-request (add-auth
-              (request method (str "/particles/" id)))
+              (request method (str "/particles/" id) params))
             response (app authed-request)]
             (-> response :body json/read-str)))))
+
+(def NAME "Monkeytown")
 
 (deftest CRUD
 
@@ -95,14 +97,27 @@
 
 
 
-    (testing "gets each particle, gives them a name"
+    (testing "gets each particle"
       (let [particles (id-comprehension @created-items)]
         (check-all particles)))
+
+    (testing "gives each particle a name"
+      (let [updated-particles (id-comprehension
+              @created-items :put {:name NAME})]
+          (check-all updated-particles NAME)))
 
     (testing "gets all particles"
       (let [response (app
             (add-auth (request :get "/particles")))
             body (-> response :body json/read-str)]
           (is (= (count body) 3))
-          (check-all body)))
+          (check-all body NAME)))
+
+    (testing "deletes all particles"
+      (let [delete-responses (id-comprehension
+              @created-items :delete )
+            no-more-entities (app
+              (add-auth (request :get "/particles")))
+            body (-> no-more-entities :body json/read-str)]
+            (is (= (count body) 0))))
 )
