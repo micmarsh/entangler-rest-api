@@ -26,19 +26,6 @@
     (app (make-post route params)))
 
 (def authtoken (atom nil))
-(defn add-auth [request]
-  (header request "Authorization" @authtoken))
-
-(def created-items (atom []))
-
-(defn check-all [body]
-    (doseq [entity body]
-      (let [{:keys [url name timestamp _id]} (kewordize entity) ]
-        (is (not (nil? url)))
-        (is (not (nil? timestamp)))
-        (is (contains? (set @created-items) _id))
-        (is (nil? name)))))
-
 
 (deftest login-signup
 
@@ -64,6 +51,35 @@
               (is (= (:status response) 401))))
 )
 
+
+(defn add-auth [request]
+  (header request "Authorization" @authtoken))
+
+(def created-items (atom []))
+
+(defn check-all
+  ([body]
+    (check-all body nil))
+  ([body new-name]
+    (doseq [entity body]
+      (let [{:keys [url name timestamp _id]} (kewordize entity) ]
+        (is (not (nil? url)))
+        (is (not (nil? timestamp)))
+        (is (contains? (set @created-items) _id))
+        (is (= new-name name))))))
+
+(defn id-comprehension
+  ([ids]
+    (id-comprehension ids :get))
+  ([ids, method]
+    (id-comprehension ids method {}))
+  ([ids, method, params]
+    (for [id ids]
+      (let [authed-request (add-auth
+              (request method (str "/particles/" id)))
+            response (app authed-request)]
+            (-> response :body json/read-str)))))
+
 (deftest CRUD
 
     (testing "can make three new entities"
@@ -78,12 +94,10 @@
               (swap! created-items #(conj % (body "_id"))))))
 
 
-    (testing "gets each particle"
-      (check-all (for [id @created-items]
-        (let [authed-request (add-auth
-                (request :get (str "/particles/" id)))
-              response (app authed-request)]
-              (-> response :body json/read-str)))))
+
+    (testing "gets each particle, gives them a name"
+      (let [particles (id-comprehension @created-items)]
+        (check-all particles)))
 
     (testing "gets all particles"
       (let [response (app
