@@ -1,14 +1,14 @@
 (ns entangler.handler
     (:use compojure.core
-        [entangler.resources :only 
-                [access-collection signup-or-login]])
+        [entangler.resources :only
+                [access-collection single-particle signup-or-login]])
     (:require [compojure.handler :as handler]
                 [compojure.route :as route]
                 [entangler.auth :as auth]))
 
 (defroutes app-routes
     (ANY "/particles" [] access-collection)
-    (GET "/particles/:id" [id] ())
+    (ANY "/particles/:_id" [] single-particle)
     (POST "/signup" [] (signup-or-login auth/signup))
         ;(build-response (signup params))  )
     (POST "/login" []

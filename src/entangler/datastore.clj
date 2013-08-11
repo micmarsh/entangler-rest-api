@@ -1,4 +1,4 @@
-(ns entangler.datastore
+  (ns entangler.datastore
     (:require [entangler.auth :as auth]
               [kinvey.core :as k]
               [marshmacros.coffee :as c]

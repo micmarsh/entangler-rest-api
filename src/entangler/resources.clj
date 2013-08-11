@@ -53,21 +53,37 @@
     :handle-created created-or-error
 )
 
+(defn check-auth-header [context]
+    (-> context
+        get-auth-header
+        auth/authorized?))
+
+(defn datastore-function [function]
+    (fn [context]
+        (let [auth (get-auth-header context)
+              params (get-params context)
+              authed-params (assoc params :authtoken auth)]
+              (function authed-params))))
+
 (defresource access-collection
     :available-media-types ["application/json"]
     :allowed-methods [:get :post]
-    :authorized? #(auth/authorized? (get-auth-header %))
+    :authorized? check-auth-header
     :malformed? #(and (:url (get-params %))
-                      (:name (get-params %))) ;TODO: this isn't going to work for GET, will
-                                        ;need to make it fancy
-    :post! (fn [context]
-        (let [{:keys [url name]} (get-params context)]
-            (d/create! (cofmap url name))))
+                      (:name (get-params %)))
+                      ;TODO: pretty sure test case is letting through crap hmmm
+    :post! (fn [context] {:body
+        ((datastore-function d/create!) context)})
 
-    :handle-ok (fn [context]
-        (let [auth (get-auth-header context)
-              params (get-params context)]
-               (d/get-many (assoc params :authtoken auth))))
+    :handle-ok (datastore-function d/get-many )
 
     :handle-created created-or-error
+)
+
+(defresource single-particle
+    :available-media-types ["application/json"]
+    :allowed-methods [:get :put :delete]
+    :authorized? check-auth-header
+    :handle-ok (datastore-function d/get-one)
+
 )
