@@ -126,9 +126,8 @@
             (is (contains? who other-id))))
 
     (testing "deletes all particles"
-      (let [delete-responses (id-comprehension
-              @created-items :delete )
-            n (println delete-responses)
+      (let [delete-responses (doall (id-comprehension
+              @created-items :delete ) )
             no-more-entities (app
               (add-auth (request :get "/particles")))
             body (get-body no-more-entities)]
