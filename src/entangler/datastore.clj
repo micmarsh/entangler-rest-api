@@ -107,11 +107,11 @@
             (k/delete-entity coll _id)))
 
 (defn share! [params]
-    (let [{:keys [_id email]} params
+    (let [{:keys [_id shareto]} params
           entity (get-one params)
           who (:who entity)
-          with-id (conj who _id)]
-        (-> {:who with-id}
+          with-other (conj who shareto )]
+        (-> {:who with-other}
           (merge params)
            update!)))
 

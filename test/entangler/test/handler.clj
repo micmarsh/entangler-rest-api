@@ -25,6 +25,9 @@
 (defn send-post [route params]
     (app (make-post route params)))
 
+(defn get-body [response]
+  (-> response :body json/read-str))
+
 (def authtoken (atom nil))
 
 (deftest login-signup
@@ -78,7 +81,7 @@
       (let [authed-request (add-auth
               (request method (str "/particles/" id) params))
             response (app authed-request)]
-            (-> response :body json/read-str)))))
+            (get-body response)))))
 
 (def NAME "Monkeytown")
 
@@ -90,12 +93,10 @@
               request (make-post "/particles" params)
               authed (add-auth request)
               response (app authed)
-              body (-> response :body json/read-str)]
+              body (get-body response)]
               (is (= (body "url") (str text ".com")))
               (is (= (body "timestamp") "Tomorrow Night"))
               (swap! created-items #(conj % (body "_id"))))))
-
-
 
     (testing "gets each particle"
       (let [particles (id-comprehension @created-items)]
@@ -109,15 +110,27 @@
     (testing "gets all particles"
       (let [response (app
             (add-auth (request :get "/particles")))
-            body (-> response :body json/read-str)]
+            body (get-body response)]
           (is (= (count body) 3))
           (check-all body NAME)))
+
+    (testing "shares a particle"
+      (let [other-id "othersID123"
+            to-send (request :put
+              (str "/particles/" (@created-items 0))
+              {:shareto other-id})
+            response (app (add-auth to-send))
+            body (get-body response)
+            who (set (body "who"))]
+            (is (= (count who) 2))
+            (is (contains? who other-id))))
 
     (testing "deletes all particles"
       (let [delete-responses (id-comprehension
               @created-items :delete )
+            n (println delete-responses)
             no-more-entities (app
               (add-auth (request :get "/particles")))
-            body (-> no-more-entities :body json/read-str)]
+            body (get-body no-more-entities)]
             (is (= (count body) 0))))
 )

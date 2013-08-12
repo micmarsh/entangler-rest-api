@@ -96,8 +96,10 @@
     :put! (fn [context]
             (let [params (get-params context)
                   shareto (:shareto params)]
-                (if (contains? params :shareto)
-                    base-fn )) )
+                    ((wrapped-in-body
+                        (if shareto d/share! d/update!))
+                     context)))
+
     :delete! (wrapped-in-body d/delete!)
 
     :handle-created error-or-response

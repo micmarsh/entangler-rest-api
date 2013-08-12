@@ -28,7 +28,12 @@
             (is (not (nil? auth)))
             (reset! authtoken auth)
             (reset! user-id (:_id user))))
-    (testing "logs in as someone else to get their id")
+
+    (testing "logs in as someone else to get their id"
+        (let [user (login "butts" "butts")
+              id (:_id user)]
+              (is (not (nil? id)))
+              (reset! other-id id)))
 
     (testing "can create things"
         (let [attributes base-attr
@@ -54,13 +59,11 @@
               (is (= updated @old-entity))))
 
     (testing "share stuff"
-      (let [shared (share! (-> {:email other-email}
+      (let [shared (share! (-> {:shareto @other-id}
                              with-auth
                             (assoc :_id @created-id)))
             whom (:who shared)
             whom-set (set whom)]
-            (println shared)
-            (println whom)
             (is (= (count whom) 2))
             (is (= (merge @old-entity {:who whom}) shared))
             (is (contains? whom-set @user-id))
