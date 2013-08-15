@@ -127,7 +127,7 @@
 
     (testing "deletes all particles"
       (let [delete-responses (doall (id-comprehension
-              @created-items :delete ) )
+              @created-items :delete))
             no-more-entities (app
               (add-auth (request :get "/particles")))
             body (get-body no-more-entities)]
