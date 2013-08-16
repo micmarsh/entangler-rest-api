@@ -1,19 +1,12 @@
 (ns entangler.auth
     (:use entangler.secrets
         [marshmacros.coffee :only [cofmap]]
-        [entangler.utils :only [kinvey-auth entangler-auth]])
+        [entangler.utils :only [kinvey-auth entangler-auth]]
+        [entangler.state :only
+            [set-good-auth! set-bad-auth! good-auth? bad-auth?]])
     (:require [kinvey.core :as k]))
 
 (def kinvey-app (k/initialize-app APP_KEY APP_SECRET))
-
-(def good-auth (atom { }))
-(def bad-auth (atom { }))
-(defn- set-good-auth! [token]
-    (swap! bad-auth #(dissoc % token))
-    (swap! good-auth #(assoc % token true)))
-(defn- set-bad-auth! [token]
-    (swap! good-auth #(dissoc % token))
-    (swap! bad-auth #(assoc % token true)))
 
 (defn- auth-ping! [token]
     (let [kinvey-token (kinvey-auth token)
@@ -27,8 +20,8 @@
           authed))
 
 (defn authorized? [token]
-    (and  (not (@bad-auth token))
-          (or (@good-auth token)
+    (and  (not (bad-auth? token))
+          (or (good-auth? token)
               (auth-ping! token))))
 
 (defn- get-attr-adder [kinvey-user]

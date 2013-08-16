@@ -2,7 +2,8 @@
   (:use clojure.test
         entangler.test.random
         entangler.test.basefns
-        entangler.auth))
+        entangler.auth
+        [entangler.state :only [good-auth]]))
 
 
 (def base-info (get-base-info))
