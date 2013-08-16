@@ -1,4 +1,4 @@
-(ns entangler.auth 
+(ns entangler.auth
     (:use entangler.secrets
         [marshmacros.coffee :only [cofmap]]
         [entangler.utils :only [kinvey-auth entangler-auth]])
@@ -19,8 +19,12 @@
     (let [kinvey-token (kinvey-auth token)
           user (k/load-user kinvey-app kinvey-token)
           collection (k/make-collection user "ping")
-          test-entity (k/new-entity collection {:test true})]
-          (k/kinvey-object? test-entity)))
+          test-entity (k/new-entity collection {:test true})
+          authed (k/kinvey-object? test-entity)]
+          (if authed
+            (set-good-auth! token)
+            (set-bad-auth! token))
+          authed))
 
 (defn authorized? [token]
     (and  (not (@bad-auth token))
@@ -29,7 +33,7 @@
 
 (defn- get-attr-adder [kinvey-user]
     (fn [so-far, attr]
-        (assoc so-far attr 
+        (assoc so-far attr
             (k/get-attr kinvey-user attr))))
 
 
@@ -59,8 +63,8 @@
 
 ;TODO: signup: take first, last, email, password
 ;       login: email, password
-;       
+;
 ;   general problem: there a a lot of things going on here, mainly conversion
 ;   and syncing commands, that require a quick auth. Solution: a kind of cache in memory
 ;   for super fast-checking that checks kinvey if not found before rejecting.
-;   
+;

@@ -8,7 +8,7 @@
 (def base-info (get-base-info))
 (def logged-in-user (atom nil))
 
-(deftest signing-up-with-baseinfo 
+(deftest signing-up-with-baseinfo
     (testing "signs up normally"
         (let [signed-up (signup base-info) ]
             (base-check signed-up base-info)))
@@ -36,6 +36,7 @@
 
     (testing "logged-in-user is still authorized"
       (let [authed (authorized? (:authtoken @logged-in-user))]
-        (is authed)))
+        (is authed)
+        (is (= (count @good-auth) 1))))
 
 )

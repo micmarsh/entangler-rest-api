@@ -13,7 +13,7 @@
 (defroutes app-routes
     (ANY "/particles" [] access-collection)
     (ANY "/particles/:_id" [] single-particle)
-    (GET "/particles/:_id/listen" [_id] socket-handler )
+    (GET "/particles/:_id/listen" [] socket-handler )
     (POST "/signup" [] (signup-or-login auth/signup))
         ;(build-response (signup params))  )
     (POST "/login" []
