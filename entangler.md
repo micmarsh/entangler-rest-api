@@ -20,3 +20,5 @@ found a way!
 ;or something
 
 Now need a way to hook sockets up to ent serv. Look up how to actually socket in Ring, read up on ring wrappers, other functional concepts like above, go crazy
+
+sockets need an associtated entity id. Make some kind of conj function (? probs a more functional way to do it) so you can make entangler-server into an atom wherever the socket server is (or referenced from where socket server is)
