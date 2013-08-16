@@ -1,9 +1,10 @@
 (ns entangler.handler
-    (:use [compojure.core :only [ANY POST defroutes]]
+    (:use [compojure.core :only [ANY GET POST defroutes]]
         ring.middleware.cors
         org.httpkit.server
         [entangler.resources :only
-                [access-collection single-particle signup-or-login]])
+                [access-collection single-particle signup-or-login]]
+        [entangler.sync :only [socket-handler]])
     (:require [compojure.handler :as handler]
                 [compojure.route :as route]
                 [entangler.auth :as auth]
@@ -12,6 +13,7 @@
 (defroutes app-routes
     (ANY "/particles" [] access-collection)
     (ANY "/particles/:_id" [] single-particle)
+    (GET "/particles/:_id/listen" [_id] socket-handler )
     (POST "/signup" [] (signup-or-login auth/signup))
         ;(build-response (signup params))  )
     (POST "/login" []
@@ -26,3 +28,6 @@
         reload/wrap-reload
      (wrap-cors
       :access-control-allow-origin #".+")))
+
+(defn -main [& args] ;; entry point, lein run will pick up and start from here
+    (run-server app {:port 3000}))
