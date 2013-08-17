@@ -9,10 +9,10 @@
 (defn- update-fn [{:keys [socket _id modifier]}]
     (fn [sockets]
         (let [sockets-set (get-sockets sockets _id)
-                ;TODO this set should probably be a map
-                ;of some unique origin identifier to the socket
               new-sockets (modifier sockets-set socket)]
-            (assoc sockets _id new-sockets))))
+            (if (= (count new-sockets) 0)
+                (dissoc sockets _id)
+                (assoc sockets _id new-sockets)))))
 
 (defn- get-sockets-updater [modifier]
     (fn [sockets-map {:keys [_id socket]}]
