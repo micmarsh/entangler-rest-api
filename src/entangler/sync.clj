@@ -20,6 +20,8 @@
 
 (def add-socket (get-sockets-updater conj))
 (def remove-socket (get-sockets-updater disj))
+;TODO can generalize all of this (along with de-globaling the auth cache)
+;into a set of "grouper" or "aggregator" structure manipulators
 
 
 ;honestly not too sure of what to do right now, but there's good

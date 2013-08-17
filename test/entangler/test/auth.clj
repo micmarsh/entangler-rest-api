@@ -33,7 +33,7 @@
 
     ;clear memory to test kinvey-ping
 
-    (reset! good-auth { })
+    (reset! good-auth #{ })
 
     (testing "logged-in-user is still authorized"
       (let [authed (authorized? (:authtoken @logged-in-user))]
