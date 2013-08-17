@@ -18,12 +18,12 @@
     (@bad-auth token))
 
 (def sockets (atom { }))
-(defn- get-sockets [id]
-    (or (@sockets id) #{}))
+(defn- get-sockets [sockets id]
+    (or (sockets id) #{}))
 
 (defn- update-fn [{:keys [socket _id modifier]}]
     (fn [sockets]
-        (let [sockets-set (get-sockets _id)
+        (let [sockets-set (get-sockets sockets _id)
                 ;TODO this set should probably be a map
                 ;of some unique origin identifier to the socket
               new-sockets (modifier sockets-set socket)]
