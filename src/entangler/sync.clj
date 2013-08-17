@@ -23,14 +23,17 @@
 ;TODO can generalize all of this (along with de-globaling the auth cache)
 ;into a set of "grouper" or "aggregator" structure manipulators
 
+(def sockets (atom { }))
 
 ;honestly not too sure of what to do right now, but there's good
 ;stuff going on in "state"
 (defn socket-handler [request]
     (println request)
-    (with-channel request con
-    ;(swap! clients assoc con true)
-    (println con " connected")
-    (on-close con (fn [status]
-                    ;(swap! clients dissoc con)
-                    (println con " disconnected. status: " status)))))
+    (let [id (get-in request [:route-params :_id])]
+        (with-channel request channel
+            (let [id-socket-map {:_id id :socket channel}]
+                (swap! sockets #(add-socket % id-socket-map))
+                (println channel " connected")
+                (on-close channel (fn [status]
+                    (swap! sockets #(remove-socket % id-socket-map))
+                    (println channel " disconnected. status: " status)))))))
