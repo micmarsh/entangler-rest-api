@@ -18,12 +18,21 @@
     (@bad-auth token))
 
 (def sockets (atom { }))
+(defn- get-sockets [id]
+    (or (@sockets id) #{}))
 
-(defn add-socket! [{:keys [_id socket]}]
-    (swap! sockets (fn [sockets]
-        (let [sockets-set (or (sockets _id) #{})
+(defn- update-fn [{:keys [socket _id modifier]}]
+    (fn [sockets]
+        (let [sockets-set (get-sockets _id)
                 ;TODO this set should probably be a map
                 ;of some unique origin identifier to the socket
-              new-sockets (conj sockets-set socket)]
-            (assoc sockets _id new-sockets)))))
+              new-sockets (modifier sockets-set socket)]
+            (assoc sockets _id new-sockets))))
+
+(defn- get-sockets-updater [modifier]
+    (fn [{:keys [_id socket]}]
+        (swap! sockets (update-fn (cofmap _id socket modifier)))))
+
+(def add-socket! (get-sockets-updater conj))
+(def remove-socket! (get-sockets-updater disj))
 

@@ -5,9 +5,8 @@
 (defn add-socket [entangler id socket]
     (assoc entangler id socket))
 
-;could have this close over the atom it's going
-;to modify (dependency injection!), which would be better than nothing
-;need to read up on managing socket connections/global vars in clojure
+;honestly not too sure of what to do right now, but there's good
+;stuff going on in "state"
 (defn socket-handler [request]
     (println request)
     (with-channel request con
